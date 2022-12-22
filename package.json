@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "selenium-webdriver": "^4.7.1",
+    "xlsx": "^0.18.5"
+  }
+}
