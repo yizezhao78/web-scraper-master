@@ -1,143 +1,116 @@
 let scrapeEmails = document.getElementById("scrapeEmails");
 let download = document.getElementById("download");
 
-var company_data;
-var website_data;
+var competitors = {a: 1, b: 2};
+var test = "123"
 
+//Scrape email logic
 async function scrapeEmailsFromPage() {
-  function resolveAfter2Seconds() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("resolved");
-      }, 2000);
-    });
-  }
-
-  function waitForElm(selector) {
-    return new Promise((resolve) => {
-      if (document.querySelector(selector)) {
-        return resolve(document.querySelector(selector));
-      }
-
-      const observer = new MutationObserver((mutations) => {
-        if (document.querySelector(selector)) {
-          resolve(document.querySelector(selector));
-          observer.disconnect();
-        }
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-    });
-  }
-
+  //get company name and email
   let company = document.getElementsByClassName("ant-typography");
   company_data = [].map.call(company, (item) => item.textContent);
   let website = document.getElementsByClassName("rpt-company-primaryurl");
   website_data = [].map.call(website, (item) => item.textContent);
 
-  console.log(company_data);
-  console.log(website_data);
-  console.log(typeof company_data);
-
-  console.log("here");
-
+  //get competitor table
   let table_body = document.getElementsByClassName(
     "ant-table-row ant-table-row-level-0"
   );
   let table_data = [].map.call(table_body, (item) => item.textContent);
+
+  //find competitors that are in the US
   let us_company = [];
   for (let i = 0; i < table_data.length; i++) {
-
     if (table_data[i].search(/United States/) != -1) {
       us_company.push(i);
     }
   }
-  console.log(us_company);
 
-  let a = document.querySelectorAll("div.company-name-container > div > a");
+  //get competitors urls
+  let urls = document.querySelectorAll("div.company-name-container > div > a");
 
-//   url = a[0].href;
-//   var win = window.open(url, "competitor").focus;
-//   resolveAfter2Seconds();
-//   let competiotor = document.getElementsByClassName("ant-typography");
-//   console.log(competiotor.textContent);
-
-  //   await waitForElm(".ant-typography").then((elm) => {
-  //     console.log("Element is ready");
-  //     console.log(elm.textContent);
-  //   });
+  //helper function: wait 1s
+  const wait = (url) =>
+    new Promise((resolve) => setTimeout(() => resolve(url), 1000));
+  
+  //helper function: open each url
+  const openUrls = async () => {
     for (const index of us_company) {
+ 
+      let url = urls[index].href;
+      const win = window.open(url);
+      await wait("1s")
 
-        url = a[index].href;
-        var win = window.open(url, `competitor ${index}`);
-        //   await waitForElm('.ant-typography').then((elm) => {
-        //       console.log('Element is ready');
-        //       alert(elm.textContent);
-        //   });
-        document.addEventListener("DOMContentLoaded", function(event) {
+      win.onload = async function(){
+        await wait("1s");
+        // alert("DOM fully loaded and parsed");
+        let competitor = win.document.getElementsByClassName("ant-typography");
+        let competitor_data = [].map.call(competitor, (item) => item.textContent);
+        let competitor_website = win.document.getElementsByClassName("rpt-company-primaryurl");
+        let competitor_website_data = [].map.call(competitor_website, (item) => item.textContent);
+        company_data.push([competitor_data[0], competitor_website_data[0]])
+        win.close();      
+      };
+    };
+  };
+  await openUrls();
+  console.log(company_data);
 
-          let competitor = document.getElementsByClassName("ant-typography");
-          let competitor_data = [].map.call(competitor, (item) => item.textContent);
-
-        });
-        // console.log(competitor_data)
-
-    //   win.close();
-    }
 }
 
+
+
+//click "Scrape email" button
 scrapeEmails.addEventListener("click", async () => {
+  console.log("test")
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   chrome.scripting.executeScript({
     target: { tabId: tab.id, allFrames: true },
     func: scrapeEmailsFromPage,
   });
+
 });
 
+
+//click "download" button
 download.addEventListener("click", () => {
-    console.log(company_data);
-    var wb = XLSX.utils.book_new();
-    wb.Props = {
-      Title: "SheetJS Tutorial",
-      Subject: "Test",
-      Author: "Red Stapler",
-      CreatedDate: new Date(2017, 12, 19),
-    };
+  var wb = XLSX.utils.book_new();
+  wb.Props = {
+    Title: "SheetJS Tutorial",
+    Subject: "Test",
+    Author: "Red Stapler",
+    CreatedDate: new Date(2017, 12, 19),
+  };
 
-    function s2ab(s) {
-      var buf = new ArrayBuffer(s.length);
-      var view = new Uint8Array(buf);
-      for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
-      return buf;
-    }
+  function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+    return buf;
+  }
 
-    wb.SheetNames.push("Test Sheet");
-    var ws_data = [[company_data, website_data]];
-    var ws = XLSX.utils.aoa_to_sheet(ws_data);
-    wb.Sheets["Test Sheet"] = ws;
+  wb.SheetNames.push("Test Sheet");
+  var ws_data = [["1", "website_data"],["2", "b"]];
+  var ws = XLSX.utils.aoa_to_sheet(ws_data);
+  wb.Sheets["Test Sheet"] = ws;
 
-    var wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
-    saveAs(
-      new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
-      "test.xlsx"
-    );
+  var wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+  saveAs(
+    new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
+    "test.xlsx"
+  );
 
-//   var blob = new Blob([s2ab(atob("data"))], {
-//     type: "text/html",
-//   });
+  //   var blob = new Blob([s2ab(atob("data"))], {
+  //     type: "text/html",
+  //   });
 
-//   href = URL.createObjectURL(blob);
+  //   href = URL.createObjectURL(blob);
 
-//   function s2ab(s) {
-//     var buf = new ArrayBuffer(s.length);
-//     var view = new Uint8Array(buf);
-//     for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
-//     return buf;
-//   }
+  //   function s2ab(s) {
+  //     var buf = new ArrayBuffer(s.length);
+  //     var view = new Uint8Array(buf);
+  //     for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
+  //     return buf;
+  //   }
 });
-
-
