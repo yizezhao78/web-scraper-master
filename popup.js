@@ -36,6 +36,7 @@ async function scrapeEmailsFromPage() {
   const saveData = (win, index) =>
     new Promise((resolve) => {
       setTimeout(() => {
+        console.log("in savedata");
         const competitor =
           win.document.getElementsByClassName("ant-typography");
         const competitor_data = [].map.call(
@@ -50,18 +51,21 @@ async function scrapeEmailsFromPage() {
           (item) => item.textContent
         );
         company_data[index] = [competitor_data[0], competitor_website_data[0]];
+        
         win.close();
+        console.log("close", index)
         resolve(true);
       }, 1000);
       // alert("DOM fully loaded and parsed");
     });
-  const openUrls = async () =>
+  const openUrls = () =>
     new Promise(async (resolve) => {
       let count = 0;
       for (const index of us_company) {
         const url = urls[index].href;
         const win = window.open(url);
         win.onload = await saveData(win, index);
+        console.log("saved", company_data);
         count += 1;
         if (index === Object.keys(us_company).length - 1) {
           resolve(true);
@@ -70,7 +74,7 @@ async function scrapeEmailsFromPage() {
     });
 
   openUrls().then((res) => {
-    console.log(compnay_data);
+    console.log(company_data);
     if (res) {
       // 执行下载数据的代码 ！！！！！！！！！！！！！！
       // download Data
