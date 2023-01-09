@@ -1,3 +1,4 @@
+
 let scrapeEmails = document.getElementById("scrapeEmails");
 let download = document.getElementById("download");
 
@@ -7,8 +8,12 @@ var test = "123";
 //Scrape email logic
 async function scrapeEmailsFromPage() {
   //get company name and email
-  let company = document.getElementsByClassName("ant-typography");
-  company_data = [].map.call(company, (item) => item.textContent);
+  let company_name = document.getElementsByClassName("ant-typography");
+
+  company_data = [].map.call(company_name, (item) => item.textContent);
+  //let company_data = [];
+  company_data[0] = ["Competitor", "Website"];
+
   let website = document.getElementsByClassName("rpt-company-primaryurl");
   website_data = [].map.call(website, (item) => item.textContent);
 
@@ -20,6 +25,7 @@ async function scrapeEmailsFromPage() {
 
   //find competitors that are in the US
   let us_company = [];
+
   for (let i = 0; i < table_data.length; i++) {
     if (table_data[i].search(/United States/) != -1) {
       us_company.push(i);
@@ -30,60 +36,93 @@ async function scrapeEmailsFromPage() {
   let urls = document.querySelectorAll("div.company-name-container > div > a");
 
   //helper function: wait 1s
-  const wait = (url) =>
-    new Promise((resolve) => setTimeout(() => resolve(url), 1000));
+  const wait = (delay) =>
+    new Promise((resolve) => setTimeout(() => resolve(true), delay));
+
+  const getDatafromPage = (win) => {
+    return new Promise(async (resolve) => {
+      let companyName, email;
+      await wait(1000);
+      let competitor = win.document.getElementsByClassName("ant-typography");
+      let competitor_data = [].map.call(competitor, (item) => item.textContent);
+      // console.log(competitor);
+      let competitor_website = win.document.getElementsByClassName(
+        "rpt-company-primaryurl"
+      );
+      let competitor_website_data = [].map.call(
+        competitor_website,
+        (item) => item.textContent
+      );
+      companyName = competitor_data[0];
+      email = competitor_website_data[0];
+
+      if (companyName && email) {
+        company_data.push([companyName, email]);
+        console.log(companyName, email);
+        resolve();
+      } else {
+        competitor = null;
+        competitor_data = null;
+        competitor_website_data = null;
+        competitor_website = null;
+        getDatafromPage(win);
+      }
+    });
+  };
 
   const saveData = (win, index) =>
-    new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("in savedata");
-        win.onload = () => {
-          console.log("onload!!!", index);
-          const competitor =
-            win.document.getElementsByClassName("ant-typography");
-          const competitor_data = [].map.call(
-            competitor,
-            (item) => item.textContent
-          );
-          const competitor_website = win.document.getElementsByClassName(
-            "rpt-company-primaryurl"
-          );
-          const competitor_website_data = [].map.call(
-            competitor_website,
-            (item) => item.textContent
-          );
-          company_data[index] = [
-            competitor_data[0],
-            competitor_website_data[0],
-          ];
-        };
+    new Promise(async (resolve) => {
+      // setTimeout(() => {
+      //await wait(1000);
+      console.log("in savedata");
+      win.onload = async () => {
+        await getDatafromPage(win);
+
+        //await wait(1500);
         win.close();
         console.log("close", index);
         resolve(true);
-      }, 1500);
+      };
+      console.log("after onload");
+      // }, 4000);
       // alert("DOM fully loaded and parsed");
     });
-  const openUrls = () => console.log("us_company", us_company);
-  new Promise(async (resolve) => {
-    let count = 0;
-    for (const index of us_company) {
-      console.log("index,", index);
-      const url = urls[index].href;
-      const win = window.open(url);
-      await saveData(win, index);
-      console.log("saved", company_data);
-      count += 1;
-      if (index === us_company.length - 1) {
-        resolve(true);
+  const openUrls = () => {
+    return new Promise(async (resolve) => {
+      let count = 0;
+      for (const index of us_company) {
+        console.log("index,", index);
+        const url = urls[index].href;
+        const win = window.open(url);
+        await saveData(win, index);
+        count += 1;
+        console.log("saved", company_data, count);
+        if (count === us_company.length) {
+          resolve(true);
+        }
       }
-    }
-  });
-
+    });
+  };
   openUrls().then((res) => {
-    console.log(company_data);
+    console.log("company data: ", company_data);
     if (res) {
-      // 执行下载数据的代码 ！！！！！！！！！！！！！！
-      // download Data
+ 
+
+      let company_name = document.getElementsByClassName("ant-typography")[0].textContent;
+
+      let CsvString = "";
+      company_data.forEach(function(RowItem, RowIndex) {
+        RowItem.forEach(function(ColItem, ColIndex) {
+          CsvString += ColItem + ',';
+        });
+        CsvString += "\r\n";
+      });
+      CsvString = "data:application/excel," + encodeURIComponent(CsvString);
+      let x = document.createElement("A");
+      x.setAttribute("href", CsvString );
+      x.setAttribute("download", company_name);
+      document.body.appendChild(x);
+      x.click();
     }
   });
 
@@ -120,7 +159,8 @@ async function scrapeEmailsFromPage() {
 
 //click "Scrape email" button
 scrapeEmails.addEventListener("click", async () => {
-  console.log("test");
+  //console.log("here");
+
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   chrome.scripting.executeScript({
