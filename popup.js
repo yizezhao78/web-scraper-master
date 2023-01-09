@@ -1,8 +1,8 @@
 let scrapeEmails = document.getElementById("scrapeEmails");
 let download = document.getElementById("download");
 
-var competitors = {a: 1, b: 2};
-var test = "123"
+var competitors = { a: 1, b: 2 };
+var test = "123";
 
 //Scrape email logic
 async function scrapeEmailsFromPage() {
@@ -32,46 +32,92 @@ async function scrapeEmailsFromPage() {
   //helper function: wait 1s
   const wait = (url) =>
     new Promise((resolve) => setTimeout(() => resolve(url), 1000));
-  
+
+  const saveData = (win, index) =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        const competitor =
+          win.document.getElementsByClassName("ant-typography");
+        const competitor_data = [].map.call(
+          competitor,
+          (item) => item.textContent
+        );
+        const competitor_website = win.document.getElementsByClassName(
+          "rpt-company-primaryurl"
+        );
+        const competitor_website_data = [].map.call(
+          competitor_website,
+          (item) => item.textContent
+        );
+        company_data[index] = [competitor_data[0], competitor_website_data[0]];
+        win.close();
+        resolve(true);
+      }, 1000);
+      // alert("DOM fully loaded and parsed");
+    });
+  const openUrls = async () =>
+    new Promise(async (resolve) => {
+      let count = 0;
+      for (const index of us_company) {
+        const url = urls[index].href;
+        const win = window.open(url);
+        win.onload = await saveData(win, index);
+        count += 1;
+        if (index === Object.keys(us_company).length - 1) {
+          resolve(true);
+        }
+      }
+    });
+
+  openUrls().then((res) => {
+    console.log(compnay_data);
+    if (res) {
+      // 执行下载数据的代码 ！！！！！！！！！！！！！！
+      // download Data
+    }
+  });
+
   //helper function: open each url
-  const openUrls = async () => {
-    for (const index of us_company) {
- 
-      let url = urls[index].href;
-      const win = window.open(url);
-      await wait("1s")
+  // const openUrls = async () => {
+  //   for (const index of us_company) {
+  //     let url = urls[index].href;
+  //     const win = window.open(url);
+  //     await wait("1s");
 
-      win.onload = async function(){
-        await wait("1s");
-        // alert("DOM fully loaded and parsed");
-        let competitor = win.document.getElementsByClassName("ant-typography");
-        let competitor_data = [].map.call(competitor, (item) => item.textContent);
-        let competitor_website = win.document.getElementsByClassName("rpt-company-primaryurl");
-        let competitor_website_data = [].map.call(competitor_website, (item) => item.textContent);
-        company_data.push([competitor_data[0], competitor_website_data[0]])
-        win.close();      
-      };
-    };
-  };
-  await openUrls();
-  console.log(company_data);
-
+  //     win.onload = async function () {
+  //       await wait("1s");
+  //       // alert("DOM fully loaded and parsed");
+  //       let competitor = win.document.getElementsByClassName("ant-typography");
+  //       let competitor_data = [].map.call(
+  //         competitor,
+  //         (item) => item.textContent
+  //       );
+  //       let competitor_website = win.document.getElementsByClassName(
+  //         "rpt-company-primaryurl"
+  //       );
+  //       let competitor_website_data = [].map.call(
+  //         competitor_website,
+  //         (item) => item.textContent
+  //       );
+  //       company_data.push([competitor_data[0], competitor_website_data[0]]);
+  //       win.close();
+  //     };
+  //   }
+  // };
+  // await openUrls();
+  // console.log(company_data);
 }
-
-
 
 //click "Scrape email" button
 scrapeEmails.addEventListener("click", async () => {
-  console.log("test")
+  console.log("test");
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   chrome.scripting.executeScript({
     target: { tabId: tab.id, allFrames: true },
     func: scrapeEmailsFromPage,
   });
-
 });
-
 
 //click "download" button
 download.addEventListener("click", () => {
@@ -91,7 +137,10 @@ download.addEventListener("click", () => {
   }
 
   wb.SheetNames.push("Test Sheet");
-  var ws_data = [["1", "website_data"],["2", "b"]];
+  var ws_data = [
+    ["1", "website_data"],
+    ["2", "b"],
+  ];
   var ws = XLSX.utils.aoa_to_sheet(ws_data);
   wb.Sheets["Test Sheet"] = ws;
 
