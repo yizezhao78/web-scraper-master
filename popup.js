@@ -37,41 +37,47 @@ async function scrapeEmailsFromPage() {
     new Promise((resolve) => {
       setTimeout(() => {
         console.log("in savedata");
-        const competitor =
-          win.document.getElementsByClassName("ant-typography");
-        const competitor_data = [].map.call(
-          competitor,
-          (item) => item.textContent
-        );
-        const competitor_website = win.document.getElementsByClassName(
-          "rpt-company-primaryurl"
-        );
-        const competitor_website_data = [].map.call(
-          competitor_website,
-          (item) => item.textContent
-        );
-        company_data[index] = [competitor_data[0], competitor_website_data[0]];
-        
+        win.onload = () => {
+          console.log("onload!!!", index);
+          const competitor =
+            win.document.getElementsByClassName("ant-typography");
+          const competitor_data = [].map.call(
+            competitor,
+            (item) => item.textContent
+          );
+          const competitor_website = win.document.getElementsByClassName(
+            "rpt-company-primaryurl"
+          );
+          const competitor_website_data = [].map.call(
+            competitor_website,
+            (item) => item.textContent
+          );
+          company_data[index] = [
+            competitor_data[0],
+            competitor_website_data[0],
+          ];
+        };
         win.close();
-        console.log("close", index)
+        console.log("close", index);
         resolve(true);
-      }, 1000);
+      }, 1500);
       // alert("DOM fully loaded and parsed");
     });
-  const openUrls = () =>
-    new Promise(async (resolve) => {
-      let count = 0;
-      for (const index of us_company) {
-        const url = urls[index].href;
-        const win = window.open(url);
-        win.onload = await saveData(win, index);
-        console.log("saved", company_data);
-        count += 1;
-        if (index === Object.keys(us_company).length - 1) {
-          resolve(true);
-        }
+  const openUrls = () => console.log("us_company", us_company);
+  new Promise(async (resolve) => {
+    let count = 0;
+    for (const index of us_company) {
+      console.log("index,", index);
+      const url = urls[index].href;
+      const win = window.open(url);
+      await saveData(win, index);
+      console.log("saved", company_data);
+      count += 1;
+      if (index === us_company.length - 1) {
+        resolve(true);
       }
-    });
+    }
+  });
 
   openUrls().then((res) => {
     console.log(company_data);
