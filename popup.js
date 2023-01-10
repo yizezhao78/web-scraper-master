@@ -100,13 +100,15 @@ async function scrapeEmailsFromPage() {
     });
   };
   openUrls().then((res) => {
+
+    // xls download
     console.log("company data: ", company_data);
     company_name = [].map.call(company_name, (item) => item.textContent);
     if (res) {
       let excelContent = ``;
       if (company_data.length) {
-        company_data.forEach((item) => {
-          excelContent += `\n${item[0]},${item[1]}`;
+        company_data.forEach((item,index) => {
+          excelContent += `${index>0 ? '\n':''}${item[0]},${item[1]}`;
         });
       }
       console.log("excelContent ", excelContent);
@@ -120,7 +122,8 @@ async function scrapeEmailsFromPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
+      
+      //csv download
       // let company_name = document.getElementsByClassName("ant-typography")[0].textContent;
 
       // let CsvString = "";
