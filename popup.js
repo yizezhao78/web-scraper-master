@@ -1,9 +1,5 @@
-
 let scrapeEmails = document.getElementById("scrapeEmails");
 let download = document.getElementById("download");
-
-var competitors = { a: 1, b: 2 };
-var test = "123";
 
 //Scrape email logic
 async function scrapeEmailsFromPage() {
@@ -57,7 +53,7 @@ async function scrapeEmailsFromPage() {
       email = competitor_website_data[0];
 
       if (companyName && email) {
-        company_data.push([companyName, email]);
+        company_data.push([companyName.replace(",", " "), email]);
         console.log(companyName, email);
         resolve();
       } else {
@@ -105,24 +101,41 @@ async function scrapeEmailsFromPage() {
   };
   openUrls().then((res) => {
     console.log("company data: ", company_data);
+    company_name = [].map.call(company_name, (item) => item.textContent);
     if (res) {
- 
-
-      let company_name = document.getElementsByClassName("ant-typography")[0].textContent;
-
-      let CsvString = "";
-      company_data.forEach(function(RowItem, RowIndex) {
-        RowItem.forEach(function(ColItem, ColIndex) {
-          CsvString += ColItem + ',';
+      let excelContent = ``;
+      if (company_data.length) {
+        company_data.forEach((item) => {
+          excelContent += `\n${item[0]},${item[1]}`;
         });
-        CsvString += "\r\n";
-      });
-      CsvString = "data:application/excel," + encodeURIComponent(CsvString);
-      let x = document.createElement("A");
-      x.setAttribute("href", CsvString );
-      x.setAttribute("download", company_name);
-      document.body.appendChild(x);
-      x.click();
+      }
+      console.log("excelContent ", excelContent);
+      let blob = new Blob([excelContent], { type: "text/plain;charset=utf-8" });
+      //解决中文乱码问题
+      blob = new Blob([String.fromCharCode(0xfeff), blob], { type: blob.type });
+      object_url = window.URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = object_url;
+      link.download = `${company_name}.xls`; //报表名称
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // let company_name = document.getElementsByClassName("ant-typography")[0].textContent;
+
+      // let CsvString = "";
+      // company_data.forEach(function(RowItem, RowIndex) {
+      //   RowItem.forEach(function(ColItem, ColIndex) {
+      //     CsvString += ColItem + ',';
+      //   });
+      //   CsvString += "\r\n";
+      // });
+      // CsvString = "data:application/excel," + encodeURIComponent(CsvString);
+      // let x = document.createElement("A");
+      // x.setAttribute("href", CsvString );
+      // x.setAttribute("download", company_name);
+      // document.body.appendChild(x);
+      // x.click();
     }
   });
 
