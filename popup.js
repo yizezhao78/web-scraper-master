@@ -1,5 +1,5 @@
 let scrapeEmails = document.getElementById("scrapeEmails");
-let download = document.getElementById("download");
+// let download = document.getElementById("download");
 
 //Scrape email logic
 async function scrapeEmailsFromPage() {
@@ -189,46 +189,35 @@ scrapeEmails.addEventListener("click", async () => {
 });
 
 //click "download" button
-download.addEventListener("click", () => {
-  var wb = XLSX.utils.book_new();
-  wb.Props = {
-    Title: "SheetJS Tutorial",
-    Subject: "Test",
-    Author: "Red Stapler",
-    CreatedDate: new Date(2017, 12, 19),
-  };
+// download.addEventListener("click", () => {
+//   var wb = XLSX.utils.book_new();
+//   wb.Props = {
+//     Title: "SheetJS Tutorial",
+//     Subject: "Test",
+//     Author: "Red Stapler",
+//     CreatedDate: new Date(2017, 12, 19),
+//   };
 
-  function s2ab(s) {
-    var buf = new ArrayBuffer(s.length);
-    var view = new Uint8Array(buf);
-    for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
-    return buf;
-  }
+//   function s2ab(s) {
+//     var buf = new ArrayBuffer(s.length);
+//     var view = new Uint8Array(buf);
+//     for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+//     return buf;
+//   }
 
-  wb.SheetNames.push("Test Sheet");
-  var ws_data = [
-    ["1", "website_data"],
-    ["2", "b"],
-  ];
-  var ws = XLSX.utils.aoa_to_sheet(ws_data);
-  wb.Sheets["Test Sheet"] = ws;
+//   wb.SheetNames.push("Test Sheet");
+//   var ws_data = [
+//     ["1", "website_data"],
+//     ["2", "b"],
+//   ];
+//   var ws = XLSX.utils.aoa_to_sheet(ws_data);
+//   wb.Sheets["Test Sheet"] = ws;
 
-  var wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
-  saveAs(
-    new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
-    "test.xlsx"
-  );
+//   var wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+//   saveAs(
+//     new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
+//     "test.xlsx"
+//   );
 
-  //   var blob = new Blob([s2ab(atob("data"))], {
-  //     type: "text/html",
-  //   });
 
-  //   href = URL.createObjectURL(blob);
-
-  //   function s2ab(s) {
-  //     var buf = new ArrayBuffer(s.length);
-  //     var view = new Uint8Array(buf);
-  //     for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
-  //     return buf;
-  //   }
-});
+// });
