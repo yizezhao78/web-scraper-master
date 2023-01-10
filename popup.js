@@ -17,7 +17,9 @@ async function scrapeEmailsFromPage() {
   let table_body = document.getElementsByClassName(
     "ant-table-row ant-table-row-level-0"
   );
+ 
   let table_data = [].map.call(table_body, (item) => item.textContent);
+// console.log(table_data)
 
   //find competitors that are in the US
   let us_company = [];
@@ -30,6 +32,7 @@ async function scrapeEmailsFromPage() {
 
   //get competitors urls
   let urls = document.querySelectorAll("div.company-name-container > div > a");
+ 
 
   //helper function: wait 1s
   const wait = (delay) =>
@@ -53,7 +56,7 @@ async function scrapeEmailsFromPage() {
       email = competitor_website_data[0];
 
       if (companyName && email) {
-        company_data.push([companyName.replace(",", " "), email]);
+        company_data.push([companyName.replace(",", ""), email]);
         console.log(companyName, email);
         resolve();
       } else {
@@ -100,11 +103,11 @@ async function scrapeEmailsFromPage() {
     });
   };
   openUrls().then((res) => {
-
-    // xls download
     console.log("company data: ", company_data);
     company_name = [].map.call(company_name, (item) => item.textContent);
     if (res) {
+
+      // xls download
       let excelContent = ``;
       if (company_data.length) {
         company_data.forEach((item,index) => {
