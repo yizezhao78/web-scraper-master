@@ -17,22 +17,25 @@ async function scrapeEmailsFromPage() {
   let table_body = document.getElementsByClassName(
     "ant-table-row ant-table-row-level-0"
   );
- 
+
   let table_data = [].map.call(table_body, (item) => item.textContent);
-// console.log(table_data)
+  // console.log("Wrong Page or No Competitors")
 
   //find competitors that are in the US
   let us_company = [];
 
   for (let i = 0; i < table_data.length; i++) {
-    if (table_data[i].search(/United States/) != -1) {
-      us_company.push(i);
+    if (table_data.length == 0) {
+      alert("wrong");
+    } else {
+      if (table_data[i].search(/United States/) != -1) {
+        us_company.push(i);
+      }
     }
   }
 
   //get competitors urls
   let urls = document.querySelectorAll("div.company-name-container > div > a");
- 
 
   //helper function: wait 1s
   const wait = (delay) =>
@@ -57,7 +60,7 @@ async function scrapeEmailsFromPage() {
 
       if (companyName && email) {
         company_data.push([companyName.replace(",", ""), email]);
-        console.log(companyName, email);
+        // console.log(companyName, email);
         resolve();
       } else {
         competitor = null;
@@ -73,113 +76,100 @@ async function scrapeEmailsFromPage() {
     new Promise(async (resolve) => {
       // setTimeout(() => {
       //await wait(1000);
-      console.log("in savedata");
+      // console.log("in savedata");
       win.onload = async () => {
         await getDatafromPage(win);
-
-        //await wait(1500);
         win.close();
-        console.log("close", index);
+        // console.log("close", index);
         resolve(true);
       };
-      console.log("after onload");
+      // console.log("after onload");
       // }, 4000);
-      // alert("DOM fully loaded and parsed");
     });
   const openUrls = () => {
     return new Promise(async (resolve) => {
-      let count = 0;
-      for (const index of us_company) {
-        console.log("index,", index);
-        const url = urls[index].href;
-        const win = window.open(url);
-        await saveData(win, index);
-        count += 1;
-        console.log("saved", company_data, count);
-        if (count === us_company.length) {
-          resolve(true);
+      if (table_body.length > 0) {
+        let count = 0;
+        for (const index of us_company) {
+          // console.log("index,", index);
+          const url = urls[index].href;
+          const win = window.open(url);
+
+          await saveData(win, index);
+          count += 1;
+          // console.log("saved", company_data, count);
+          if (count === us_company.length) {
+            resolve(true);
+          }
         }
+      } else {
+        alert("Wrong Page or No Competitors");
+        resolve(false);
       }
     });
   };
-  openUrls().then((res) => {
-    console.log("company data: ", company_data);
-    company_name = [].map.call(company_name, (item) => item.textContent);
-    if (res) {
-
-      // xls download
-      let excelContent = ``;
-      if (company_data.length) {
-        company_data.forEach((item,index) => {
-          excelContent += `${index>0 ? '\n':''}${item[0]},${item[1]}`;
-        });
-      }
-      console.log("excelContent ", excelContent);
-      let blob = new Blob([excelContent], { type: "text/plain;charset=utf-8" });
-      //解决中文乱码问题
-      blob = new Blob([String.fromCharCode(0xfeff), blob], { type: blob.type });
-      object_url = window.URL.createObjectURL(blob);
-      var link = document.createElement("a");
-      link.href = object_url;
-      link.download = `${company_name}.xls`; //报表名称
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      //csv download
-      // let company_name = document.getElementsByClassName("ant-typography")[0].textContent;
-
-      // let CsvString = "";
-      // company_data.forEach(function(RowItem, RowIndex) {
-      //   RowItem.forEach(function(ColItem, ColIndex) {
-      //     CsvString += ColItem + ',';
-      //   });
-      //   CsvString += "\r\n";
-      // });
-      // CsvString = "data:application/excel," + encodeURIComponent(CsvString);
-      // let x = document.createElement("A");
-      // x.setAttribute("href", CsvString );
-      // x.setAttribute("download", company_name);
-      // document.body.appendChild(x);
-      // x.click();
-    }
-  });
-
-  //helper function: open each url
-  // const openUrls = async () => {
-  //   for (const index of us_company) {
-  //     let url = urls[index].href;
-  //     const win = window.open(url);
-  //     await wait("1s");
-
-  //     win.onload = async function () {
-  //       await wait("1s");
-  //       // alert("DOM fully loaded and parsed");
-  //       let competitor = win.document.getElementsByClassName("ant-typography");
-  //       let competitor_data = [].map.call(
-  //         competitor,
-  //         (item) => item.textContent
-  //       );
-  //       let competitor_website = win.document.getElementsByClassName(
-  //         "rpt-company-primaryurl"
-  //       );
-  //       let competitor_website_data = [].map.call(
-  //         competitor_website,
-  //         (item) => item.textContent
-  //       );
-  //       company_data.push([competitor_data[0], competitor_website_data[0]]);
-  //       win.close();
-  //     };
-  //   }
+  // const checkCompetitor = () => {
+  //   // console.log("in check")
+  //   return new Promise((resolve) => {});
   // };
-  // await openUrls();
-  // console.log(company_data);
+  // checkCompetitor().then((res) => {
+  //   if (res) {
+  openUrls().then(
+    (res) => {
+      // console.log("company data: ", company_data);
+      company_name = [].map.call(company_name, (item) => item.textContent);
+      if (res) {
+        // xls download
+        let excelContent = ``;
+        if (company_data.length) {
+          company_data.forEach((item, index) => {
+            excelContent += `${index > 0 ? "\n" : ""}${item[0]},${item[1]}`;
+          });
+        }
+        console.log("excelContent ", excelContent);
+        let blob = new Blob([excelContent], {
+          type: "text/plain;charset=utf-8",
+        });
+        //解决中文乱码问题
+        blob = new Blob([String.fromCharCode(0xfeff), blob], {
+          type: blob.type,
+        });
+        object_url = window.URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = object_url;
+        link.download = `${company_name}.xls`; //报表名称
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        //csv download
+        // let company_name = document.getElementsByClassName("ant-typography")[0].textContent;
+
+        // let CsvString = "";
+        // company_data.forEach(function(RowItem, RowIndex) {
+        //   RowItem.forEach(function(ColItem, ColIndex) {
+        //     CsvString += ColItem + ',';
+        //   });
+        //   CsvString += "\r\n";
+        // });
+        // CsvString = "data:application/excel," + encodeURIComponent(CsvString);
+        // let x = document.createElement("A");
+        // x.setAttribute("href", CsvString );
+        // x.setAttribute("download", company_name);
+        // document.body.appendChild(x);
+        // x.click();
+      }
+    },
+    () => {
+      alert("error");
+    }
+  );
+  //   }
+  // });
 }
 
 //click "Scrape email" button
 scrapeEmails.addEventListener("click", async () => {
-  //console.log("here");
-
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   chrome.scripting.executeScript({
@@ -218,6 +208,5 @@ scrapeEmails.addEventListener("click", async () => {
 //     new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
 //     "test.xlsx"
 //   );
-
 
 // });
